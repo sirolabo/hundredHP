@@ -86,12 +86,13 @@ io.on('connection', function(socket) {
       return console.log(err);
     });
   });
-  return socket.on('fs_load', function(param) {
+  return socket.on('fs_read', function(param) {
     return r.fs.readFile(param.fileName, function(err, fileData) {
       if (err) {
-        console.log(err);
+        return console.log(err);
+      } else {
+        return io.sockets.emit(param.id + '_end', JSON.parse(fileData));
       }
-      return io.sockets.emit(param.id + '_end', JSON.parse(fileData));
     });
   });
 });

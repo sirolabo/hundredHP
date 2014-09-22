@@ -1,5 +1,80 @@
-extends _common
+extends _core
 block head
   +makeHead("Home")
 
 block main
+  .frontBG(data-webele="frontBG")
+    section
+      #homeCarousel(data-webele="carousel")
+        -imgList=["1.jpg", "2.jpg", "3.jpg"]
+        +bootstrap_carousel(imgList)
+        
+    section(data-webele="dataSection")
+      #productsBannerArea(data-webele="productArea")
+        .colorTextBox(data-webele="headline")
+          .text="Products"
+        img(data-webele="banner" src=path.img + "page/index/banner/1.jpg")
+        img(data-webele="banner" src=path.img + "page/index/banner/2.jpg")
+            
+      #infoArea(data-webele="infoArea")
+        .colorTextBox(data-webele="headline")
+          .text="Infomation"
+        +bootstrap_accordionTop("infoAccordion")
+          +bootstrap_accordion("更新情報", 0, "info-sign")
+            .infoText(data-webele="infoText")
+              .date(data-webele="infoText-date")
+                ="YYYY/MM/DD"
+              .text(data-webele="infoText-text")
+                ="更新情報ああああああああああああああああああああああああああああああああああああああああああああああああ"
+            .infoText(data-webele="infoText")
+              .date(data-webele="infoText-date")
+                ="YYYY/MM/DD"
+              .text(data-webele="infoText-text")
+                ="更新情報ああああああああああああああああああああああああああああああああああああああああああああああああ"
+            .infoText(data-webele="infoText")
+              .date(data-webele="infoText-date")
+                ="YYYY/MM/DD"
+              .text(data-webele="infoText-text")
+                ="更新情報ああああああああああああああああああああああああああああああああああああああああああああああああ"
+            .infoText(data-webele="infoText")
+              .date(data-webele="infoText-date")
+                ="YYYY/MM/DD"
+              .text(data-webele="infoText-text")
+                ="更新情報ああああああああああああああああああああああああああああああああああああああああああああああああ"
+          +bootstrap_accordion("最新ブログ記事", 1, "pencil")
+            .infoText(data-webele="infoText")
+              .date(data-webele="infoText-date")
+                ="YYYY/MM/DD"
+              .text(data-webele="infoText-text")
+                ="更新情報ああああああああああああああああああああああああああああああああああああああああああああああああ"
+            .infoText(data-webele="infoText")
+              .date(data-webele="infoText-date")
+                ="YYYY/MM/DD"
+              .text(data-webele="infoText-text")
+                ="更新情報ああああああああああああああああああああああああああああああああああああああああああああああああ"
+            .infoText(data-webele="infoText")
+              .date(data-webele="infoText-date")
+                ="YYYY/MM/DD"
+              .text(data-webele="infoText-text")
+                ="更新情報ああああああああああああああああああああああああああああああああああああああああああああああああ"
+            .infoText(data-webele="infoText")
+              .date(data-webele="infoText-date")
+                ="YYYY/MM/DD"
+              .text(data-webele="infoText-text")
+                ="更新情報ああああああああああああああああああああああああああああああああああああああああああああああああ"
+            .infoText(data-webele="infoText")
+              .date(data-webele="infoText-date")
+                ="YYYY/MM/DD"
+              .text(data-webele="infoText-text")
+                ="更新情報ああああああああああああああああああああああああああああああああああああああああああああああああ"
+            .infoText(data-webele="infoText")
+              .date(data-webele="infoText-date")
+                ="YYYY/MM/DD"
+              .text(data-webele="infoText-text")
+                ="更新情報ああああああああああああああああああああああああああああああああああああああああああああああああ"
+          +bootstrap_accordion("XXXXXX", 2, "leaf")
+            .infoText(data-webele="infoText")
+              .date(data-webele="infoText-date")
+                ="YYYY/MM/DD"
+              .text(data-webele="infoText-text")
+                ="更新情報ああああああああああああああああああああああああああああああああああああああああああああああああ"

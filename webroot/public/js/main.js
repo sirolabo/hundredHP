@@ -1,10 +1,16 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function (global){
+global.isLocalTest = false;
+
+global.serverURL = "http://test1-sirolabo.rhcloud.com/";
+
 require("cssEditor");
 
 require("event/com").init();
 
 
 
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"cssEditor":11,"event/com":20}],2:[function(require,module,exports){
 module.exports = {
   obj: require("./lib/obj"),
@@ -532,6 +538,12 @@ exports.endTimer = function(id) {
   return time;
 };
 
+exports.getNowTime = function() {
+  var date;
+  date = new Date();
+  return String(date.getFullYear()) + String(date.getMonth() + 1) + String(date.getDate()) + String(date.getHours()) + String(date.getMinutes()) + String(date.getSeconds());
+};
+
 
 
 },{}],9:[function(require,module,exports){
@@ -700,28 +712,28 @@ $('#colorInput_webCustomizer').bind('change', (function(_this) {
 $("#page_save").click((function(_this) {
   return function(event) {
     data.setCookie();
-    return alert("ページストレージに保存しました。");
+    return alert("ページキャッシュに保存しました。");
   };
 })(this));
 
 $("#page_clear").click((function(_this) {
   return function(event) {
     data.clearCookie();
-    return location.reload();
+    return alert("ページキャッシュをクリアしました。");
   };
 })(this));
 
 $("#global_save").click((function(_this) {
   return function(event) {
     data.setCookie_G();
-    return alert("グローバルストレージに保存しました。");
+    return alert("グローバルキャッシュに保存しました。");
   };
 })(this));
 
 $("#global_clear").click((function(_this) {
   return function(event) {
     data.clearCookie_G();
-    return location.reload();
+    return alert("グローバルキャッシュをクリアしました。");
   };
 })(this));
 
@@ -734,11 +746,38 @@ $("#generateCodes").click((function(_this) {
 
 $("#saveAsFile").click((function(_this) {
   return function(event) {
-    return data.saveAsFile();
+    return data.saveFile();
   };
 })(this));
 
 $("#loadFromFile").click((function(_this) {
+  return function(event) {
+    console.log("サーバデータをロードします。");
+    return data.loadFile();
+  };
+})(this));
+
+$("#commonSave").click((function(_this) {
+  return function(event) {
+    data.commonSave();
+    return alert("共通データを保存しました。");
+  };
+})(this));
+
+$("#commonLoad").click((function(_this) {
+  return function(event) {
+    data.commonLoad();
+    return alert("共通データをロードしました。");
+  };
+})(this));
+
+$("#saveBKFile").click((function(_this) {
+  return function(event) {
+    return data.saveBKFile();
+  };
+})(this));
+
+$("#loadBKFile").click((function(_this) {
   return function(event) {
     return $("#loader").click();
   };
@@ -748,8 +787,10 @@ loadFromFile = (function(_this) {
   return function(e, parent) {
     var JsonObj;
     JsonObj = JSON.parse(e.target.result);
+    data.gui_css = JsonObj.gui_css;
     data.webele = JsonObj.webele;
     data.HSL = JsonObj.HSL;
+    data.gui_option = JsonObj.gui_option;
     data.optionData = JsonObj.optionData;
     data.responsiveMax = JsonObj.responsiveMax;
     return _this.init();
@@ -847,7 +888,7 @@ setCSS = function() {
             }
             cssData.background.color = getColor(webeleData.background.color);
             if (getVal(webeleData.background.image.val)) {
-              cssData.background.image = "../../src/img/imageList/" + getVal(webeleData.background.image.val);
+              cssData.background.image = "../img/imageList/" + getVal(webeleData.background.image.val);
             } else {
               cssData.background.image = "";
             }
@@ -889,6 +930,7 @@ setCSS = function() {
                 cssData.border[section] = "";
               }
             }
+            cssData.rule.important = getVal(webeleData.rule.important.val);
             if (webeleData.borderRadius.topLeft.val !== 0 || webeleData.borderRadius.topRight.val !== 0 || webeleData.borderRadius.bottomLeft.val !== 0 || webeleData.borderRadius.bottomRight.val !== 0) {
               cssData.radius.radius = webeleData.borderRadius.topLeft.val + "px " + webeleData.borderRadius.topRight.val + "px " + webeleData.borderRadius.bottomLeft.val + "px " + webeleData.borderRadius.bottomRight.val + "px";
             } else {
@@ -971,7 +1013,8 @@ setCSS = function() {
 
 
 },{"./data":10,"core":2,"css":13,"debug":16,"event/trans":21,"web":25}],10:[function(require,module,exports){
-var anime, colorNameList, core, css, debug, ele, getColorGuiData, getJsonData, getPageCookieName, getUnitSliderGuiData, io, map, propData, res, setID, setLocalData, socketIO, web, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2;
+(function (global){
+var anime, colorNameList, core, css, debug, ele, getColorGuiData, getJsonData, getUnitSliderGuiData, io, map, propData, res, setID, setJSONData, setLocalData, socketIO, web, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2;
 
 debug = require("debug");
 
@@ -1005,7 +1048,7 @@ debug.data.imageList.unshift("");
 
 exports.responsiveMax = "small";
 
-exports.responsiveList = ["exSmall", "small", "middle", "large"];
+exports.responsiveList = ["exSmall", "small"];
 
 exports.animationState = ["start", "end"];
 
@@ -1014,7 +1057,13 @@ exports.animationState = ["start", "end"];
   通信
  */
 
-io = socketIO.connect('http://localhost:1234');
+if (isLocalTest) {
+  io = socketIO.connect('http://localhost:1234', {
+    secure: true
+  });
+} else {
+  io = socketIO.connect(global.serverURL);
+}
 
 getColorGuiData = function() {
   return {
@@ -1457,6 +1506,13 @@ exports.gui_css = {
       }
       return _results;
     }
+  },
+  rule: {
+    init: function() {
+      return this.important = new web.gui.selectBox({
+        option: ["", "true"]
+      });
+    }
   }
 };
 
@@ -1539,12 +1595,6 @@ setID(this.gui_option);
 
 core.obj.setMapVal(this.optionData, [], this.gui_option);
 
-getPageCookieName = function() {
-  var strList;
-  strList = location.href.split("/");
-  return strList[strList.length - 1].split(".")[0] + this.name;
-};
-
 getJsonData = (function(_this) {
   return function() {
     return {
@@ -1558,29 +1608,55 @@ getJsonData = (function(_this) {
   };
 })(this);
 
+setJSONData = (function(_this) {
+  return function(data) {
+    var deleteExWebele, fix;
+    fix = function() {
+      console.log(_this.webele);
+      return console.log("json fixed");
+    };
+    deleteExWebele = function() {
+      var key, param, resParam, _ref3, _results;
+      _ref3 = _this.webele;
+      _results = [];
+      for (key in _ref3) {
+        resParam = _ref3[key];
+        _results.push((function() {
+          var _results1;
+          _results1 = [];
+          for (key in resParam) {
+            param = resParam[key];
+            if (this.webeleList.indexOf(key) === -1) {
+              _results1.push(delete resParam[key]);
+            } else {
+              _results1.push(void 0);
+            }
+          }
+          return _results1;
+        }).call(_this));
+      }
+      return _results;
+    };
+    core.obj.marge(_this.gui_css, data.gui_css);
+    core.obj.marge(_this.gui_option, data.gui_option);
+    core.obj.marge(_this.webele, data.webele);
+    _this.HSL = data.HSL;
+    _this.optionData = data.optionData;
+    _this.responsiveMax = data.responsiveMax;
+    return deleteExWebele();
+  };
+})(this);
+
 setLocalData = (function(_this) {
   return function() {
-    var jsonLoadEvent, setJSONData;
-    setJSONData = function(data) {
-      core.obj.marge(_this.gui_css, data.gui_css);
-      core.obj.marge(_this.gui_option, data.gui_option);
-      core.obj.marge(_this.webele, data.webele);
-      _this.HSL = data.HSL;
-      _this.optionData = data.optionData;
-      return _this.responsiveMax = data.responsiveMax;
-    };
-    jsonLoadEvent = function(data) {
-      var ctr;
-      setJSONData(data);
-      ctr = require("./ctr");
-      return ctr.init();
-    };
-    if (localStorage.getItem(getPageCookieName())) {
-      return setJSONData(JSON.parse(localStorage.getItem(getPageCookieName())));
+    if (localStorage.getItem(web.url.getPageName())) {
+      setJSONData(JSON.parse(localStorage.getItem(web.url.getPageName())));
+      return alert("ページキャッシュをロードしました。");
     } else if (localStorage.getItem(_this.name)) {
-      return setJSONData(JSON.parse(localStorage.getItem(_this.name)));
+      setJSONData(JSON.parse(localStorage.getItem(_this.name)));
+      return alert("グローバルキャッシュをロードしました。");
     } else {
-      return core.file.getJSONFile("./src/webCustomizer/" + getPageCookieName() + ".json", jsonLoadEvent);
+      return _this.loadFile();
     }
   };
 })(this);
@@ -1594,26 +1670,70 @@ exports.clearCookie_G = function() {
 };
 
 exports.setCookie = function() {
-  return localStorage.setItem(getPageCookieName(), JSON.stringify(getJsonData()));
+  return localStorage.setItem(web.url.getPageName() + this.name, JSON.stringify(getJsonData()));
 };
 
 exports.clearCookie = function() {
-  return localStorage.removeItem(getPageCookieName());
+  return localStorage.removeItem(web.url.getPageName() + this.name);
 };
 
-exports.saveAsFile = function() {
+exports.saveFile = function() {
   io.emit('fs_write', {
-    fileName: "./webroot/public/css/cssEditor/" + getPageCookieName() + ".json",
+    fileName: "./webroot/public/css/cssEditor/" + web.url.getPageName() + ".json",
     data: JSON.stringify(getJsonData())
   });
-  return alert("save完了");
+  return alert("サーバデータを保存しました。");
 };
+
+exports.loadFile = function() {
+  return io.emit('fs_read', {
+    fileName: "./webroot/public/css/cssEditor/" + web.url.getPageName() + ".json",
+    id: "cssEditor_load"
+  });
+};
+
+exports.saveBKFile = function() {
+  return core.file.downloadData(JSON.stringify(getJsonData()), this.name + "_" + web.url.getPageName() + "_" + core.time.getNowTime() + ".json");
+};
+
+exports.commonSave = function() {
+  return io.emit('fs_write', {
+    fileName: "./webroot/public/css/cssEditor/common.json",
+    data: JSON.stringify(getJsonData())
+  });
+};
+
+exports.commonLoad = function() {
+  return io.emit('fs_read', {
+    fileName: "./webroot/public/css/cssEditor/common.json",
+    id: "cssEditor_load"
+  });
+};
+
+io.on('cssEditor_load_end', (function(_this) {
+  return function(loadData) {
+    var ctr;
+    setJSONData(loadData);
+    ctr = require("./ctr");
+    return ctr.init();
+  };
+})(this));
+
+io.on('cssEditor_load_common_end', (function(_this) {
+  return function(loadData) {
+    var ctr;
+    setJSONData(loadData);
+    ctr = require("./ctr");
+    return ctr.init();
+  };
+})(this));
 
 setLocalData();
 
 
 
-},{"./ctr":9,"core":2,"css":13,"debug":16,"socket.io-client":31,"web":25}],11:[function(require,module,exports){
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./ctr":9,"core":2,"css":13,"debug":16,"socket.io-client":32,"web":25}],11:[function(require,module,exports){
 var ctr_css;
 
 require("./data");
@@ -1804,55 +1924,103 @@ getChanger = function() {
           "class": "contentsArea"
         }
       ], [
-        ["div", {}, "GlobalChash"], [
-          [
-            "button", {
-              id: "global_save",
-              type: "button",
-              href: "data:test.txt"
-            }, "Save"
-          ], [
-            "button", {
-              id: "global_clear",
-              type: "button"
-            }, "Clear"
-          ]
-        ], ["div", {}, "PageChash"], [
-          [
-            "button", {
-              id: "page_save",
-              type: "button"
-            }, "Save"
-          ], [
-            "button", {
-              id: "page_clear",
-              type: "button"
-            }, "Clear"
-          ]
-        ], ["div", {}, "File"], [
-          [
-            "input", {
-              id: "loader",
-              "class": "displayNone",
-              type: "file"
-            }
-          ], [
-            "button", {
-              id: "saveAsFile",
-              type: "button"
-            }, "Save"
-          ], [
-            "button", {
-              id: "loadFromFile",
-              type: "button"
-            }, "Load"
-          ]
-        ], ["div", {}, "Code"], [
-          [
-            "button", {
-              id: "generateCodes",
-              type: "button"
-            }, "GenerateCodes"
+        ["table"], [
+          ["tr"], [
+            ["td", {}, "serverData:"], ["td"], [
+              [
+                "button", {
+                  id: "saveAsFile",
+                  type: "button"
+                }, "Save"
+              ]
+            ], ["td"], [
+              [
+                "button", {
+                  id: "loadFromFile",
+                  type: "button"
+                }, "Load"
+              ]
+            ]
+          ], ["tr"], [
+            ["td", {}, "commonData:"], ["td"], [
+              [
+                "button", {
+                  id: "commonSave",
+                  type: "button"
+                }, "Save"
+              ]
+            ], ["td"], [
+              [
+                "button", {
+                  id: "commonLoad",
+                  type: "button"
+                }, "Load"
+              ]
+            ]
+          ], ["tr"], [
+            ["td", {}, "pageChash:"], ["td"], [
+              [
+                "button", {
+                  id: "page_save",
+                  type: "button"
+                }, "Save"
+              ]
+            ], ["td"], [
+              [
+                "button", {
+                  id: "page_clear",
+                  type: "button"
+                }, "Clear"
+              ]
+            ]
+          ], ["tr"], [
+            ["td", {}, "globalChash:"], ["td"], [
+              [
+                "button", {
+                  id: "global_save",
+                  type: "button",
+                  href: "data:test.txt"
+                }, "Save"
+              ]
+            ], ["td"], [
+              [
+                "button", {
+                  id: "global_clear",
+                  type: "button"
+                }, "Clear"
+              ]
+            ]
+          ], ["tr"], [
+            ["td", {}, "code:"], ["td"], [
+              [
+                "button", {
+                  id: "generateCodes",
+                  type: "button"
+                }, "Generate"
+              ]
+            ]
+          ], ["tr"], [
+            ["td", {}, "backup:"], ["td"], [
+              [
+                "button", {
+                  id: "saveBKFile",
+                  type: "button"
+                }, "Save"
+              ]
+            ], ["td"], [
+              [
+                "input", {
+                  id: "loader",
+                  "class": "displayNone",
+                  type: "file"
+                }
+              ], [
+                "button", {
+                  id: "loadBKFile",
+                  type: "button"
+                }, "Load"
+              ]
+            ]
           ]
         ]
       ]
@@ -2131,6 +2299,11 @@ prop = (function() {
         return this.radius = "";
       }
     };
+    this.rule = {
+      init: function(param) {
+        return this.important = "";
+      }
+    };
     this.font = {
       init: function(param) {
         this.family = "";
@@ -2210,7 +2383,7 @@ prop = (function() {
   }
 
   prop.prototype.make = function() {
-    var cssData, section, tagData, _i, _j, _len, _len1, _ref, _ref1;
+    var cssData, key, param, section, tagData, _i, _j, _len, _len1, _ref, _ref1;
     cssData = {
       1: {
         media: {
@@ -2366,6 +2539,12 @@ prop = (function() {
       tagData["transform-origin"] = this.transform.origin;
     }
     if (Object.keys(tagData).length !== 0) {
+      if (this.rule.important) {
+        for (key in tagData) {
+          param = tagData[key];
+          tagData[key] = tagData[key] + " !important";
+        }
+      }
       return css_core.make(cssData);
     } else {
       return "";
@@ -2923,12 +3102,13 @@ module.exports = {
   color: require("./lib/color"),
   size: require("./lib/size"),
   gui: require("./lib/gui"),
-  core: require("./lib/core")
+  core: require("./lib/core"),
+  url: require("./lib/url")
 };
 
 
 
-},{"./lib/color":26,"./lib/core":27,"./lib/data":28,"./lib/gui":29,"./lib/size":30}],26:[function(require,module,exports){
+},{"./lib/color":26,"./lib/core":27,"./lib/data":28,"./lib/gui":29,"./lib/size":30,"./lib/url":31}],26:[function(require,module,exports){
 
 /**
   @class web.color
@@ -3534,9 +3714,36 @@ exports.chooseResponsiveMax = function(resName, resMax) {
 
 },{}],31:[function(require,module,exports){
 
+/**
+  @class web.url
+    url関連の操作を行います。
+ */
+var core;
+
+core = require("core");
+
+
+/**
+  @method getPageName
+  urlからページ名を取得します。
+ */
+
+exports.getPageName = function() {
+  var name;
+  name = location.href.split("/")[location.href.split("/").length - 1].split(".")[0].split("#")[0];
+  if (name === "") {
+    name = "index";
+  }
+  return name;
+};
+
+
+
+},{"core":2}],32:[function(require,module,exports){
+
 module.exports = require('./lib/');
 
-},{"./lib/":32}],32:[function(require,module,exports){
+},{"./lib/":33}],33:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -3625,7 +3832,7 @@ exports.connect = lookup;
 exports.Manager = require('./manager');
 exports.Socket = require('./socket');
 
-},{"./manager":33,"./socket":35,"./url":36,"debug":39,"socket.io-parser":70}],33:[function(require,module,exports){
+},{"./manager":34,"./socket":36,"./url":37,"debug":40,"socket.io-parser":71}],34:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -4085,7 +4292,7 @@ Manager.prototype.onreconnect = function(){
   this.emitAll('reconnect', attempt);
 };
 
-},{"./on":34,"./socket":35,"./url":36,"component-bind":37,"component-emitter":38,"debug":39,"engine.io-client":40,"object-component":67,"socket.io-parser":70}],34:[function(require,module,exports){
+},{"./on":35,"./socket":36,"./url":37,"component-bind":38,"component-emitter":39,"debug":40,"engine.io-client":41,"object-component":68,"socket.io-parser":71}],35:[function(require,module,exports){
 
 /**
  * Module exports.
@@ -4111,7 +4318,7 @@ function on(obj, ev, fn) {
   };
 }
 
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -4491,7 +4698,7 @@ Socket.prototype.disconnect = function(){
   return this;
 };
 
-},{"./on":34,"component-bind":37,"component-emitter":38,"debug":39,"has-binary":64,"indexof":66,"socket.io-parser":70,"to-array":74}],36:[function(require,module,exports){
+},{"./on":35,"component-bind":38,"component-emitter":39,"debug":40,"has-binary":65,"indexof":67,"socket.io-parser":71,"to-array":75}],37:[function(require,module,exports){
 (function (global){
 
 /**
@@ -4566,7 +4773,7 @@ function url(uri, loc){
 }
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"debug":39,"parseuri":68}],37:[function(require,module,exports){
+},{"debug":40,"parseuri":69}],38:[function(require,module,exports){
 /**
  * Slice reference.
  */
@@ -4591,7 +4798,7 @@ module.exports = function(obj, fn){
   }
 };
 
-},{}],38:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -4757,7 +4964,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],39:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 
 /**
  * Expose `debug()` as the module.
@@ -4896,11 +5103,11 @@ try {
   if (window.localStorage) debug.enable(localStorage.debug);
 } catch(e){}
 
-},{}],40:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 
 module.exports =  require('./lib/');
 
-},{"./lib/":41}],41:[function(require,module,exports){
+},{"./lib/":42}],42:[function(require,module,exports){
 
 module.exports = require('./socket');
 
@@ -4912,7 +5119,7 @@ module.exports = require('./socket');
  */
 module.exports.parser = require('engine.io-parser');
 
-},{"./socket":42,"engine.io-parser":51}],42:[function(require,module,exports){
+},{"./socket":43,"engine.io-parser":52}],43:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies.
@@ -5564,7 +5771,7 @@ Socket.prototype.filterUpgrades = function (upgrades) {
 };
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./transport":43,"./transports":44,"component-emitter":38,"debug":39,"engine.io-parser":51,"indexof":66,"parsejson":60,"parseqs":61,"parseuri":62}],43:[function(require,module,exports){
+},{"./transport":44,"./transports":45,"component-emitter":39,"debug":40,"engine.io-parser":52,"indexof":67,"parsejson":61,"parseqs":62,"parseuri":63}],44:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -5716,7 +5923,7 @@ Transport.prototype.onClose = function () {
   this.emit('close');
 };
 
-},{"component-emitter":38,"engine.io-parser":51}],44:[function(require,module,exports){
+},{"component-emitter":39,"engine.io-parser":52}],45:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies
@@ -5773,7 +5980,7 @@ function polling(opts){
 }
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling-jsonp":45,"./polling-xhr":46,"./websocket":48,"xmlhttprequest":49}],45:[function(require,module,exports){
+},{"./polling-jsonp":46,"./polling-xhr":47,"./websocket":49,"xmlhttprequest":50}],46:[function(require,module,exports){
 (function (global){
 
 /**
@@ -6009,7 +6216,7 @@ JSONPPolling.prototype.doWrite = function (data, fn) {
 };
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling":47,"component-inherit":50}],46:[function(require,module,exports){
+},{"./polling":48,"component-inherit":51}],47:[function(require,module,exports){
 (function (global){
 /**
  * Module requirements.
@@ -6364,7 +6571,7 @@ function unloadHandler() {
 }
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling":47,"component-emitter":38,"component-inherit":50,"debug":39,"xmlhttprequest":49}],47:[function(require,module,exports){
+},{"./polling":48,"component-emitter":39,"component-inherit":51,"debug":40,"xmlhttprequest":50}],48:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -6611,7 +6818,7 @@ Polling.prototype.uri = function(){
   return schema + '://' + this.hostname + port + this.path + query;
 };
 
-},{"../transport":43,"component-inherit":50,"debug":39,"engine.io-parser":51,"parseqs":61,"xmlhttprequest":49}],48:[function(require,module,exports){
+},{"../transport":44,"component-inherit":51,"debug":40,"engine.io-parser":52,"parseqs":62,"xmlhttprequest":50}],49:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -6842,7 +7049,7 @@ WS.prototype.check = function(){
   return !!WebSocket && !('__initialize' in WebSocket && this.name === WS.prototype.name);
 };
 
-},{"../transport":43,"component-inherit":50,"debug":39,"engine.io-parser":51,"parseqs":61,"ws":63}],49:[function(require,module,exports){
+},{"../transport":44,"component-inherit":51,"debug":40,"engine.io-parser":52,"parseqs":62,"ws":64}],50:[function(require,module,exports){
 // browser shim for xmlhttprequest module
 var hasCORS = require('has-cors');
 
@@ -6880,7 +7087,7 @@ module.exports = function(opts) {
   }
 }
 
-},{"has-cors":58}],50:[function(require,module,exports){
+},{"has-cors":59}],51:[function(require,module,exports){
 
 module.exports = function(a, b){
   var fn = function(){};
@@ -6888,7 +7095,7 @@ module.exports = function(a, b){
   a.prototype = new fn;
   a.prototype.constructor = a;
 };
-},{}],51:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 (function (global){
 /**
  * Module dependencies.
@@ -7458,7 +7665,7 @@ exports.decodePayloadAsBinary = function (data, binaryType, callback) {
 };
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./keys":52,"after":53,"arraybuffer.slice":54,"base64-arraybuffer":55,"blob":56,"utf8":57}],52:[function(require,module,exports){
+},{"./keys":53,"after":54,"arraybuffer.slice":55,"base64-arraybuffer":56,"blob":57,"utf8":58}],53:[function(require,module,exports){
 
 /**
  * Gets the keys for an object.
@@ -7479,7 +7686,7 @@ module.exports = Object.keys || function keys (obj){
   return arr;
 };
 
-},{}],53:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 module.exports = after
 
 function after(count, callback, err_cb) {
@@ -7509,7 +7716,7 @@ function after(count, callback, err_cb) {
 
 function noop() {}
 
-},{}],54:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 /**
  * An abstraction for slicing an arraybuffer even when
  * ArrayBuffer.prototype.slice is not supported
@@ -7540,7 +7747,7 @@ module.exports = function(arraybuffer, start, end) {
   return result.buffer;
 };
 
-},{}],55:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 /*
  * base64-arraybuffer
  * https://github.com/niklasvh/base64-arraybuffer
@@ -7601,7 +7808,7 @@ module.exports = function(arraybuffer, start, end) {
   };
 })("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
 
-},{}],56:[function(require,module,exports){
+},{}],57:[function(require,module,exports){
 (function (global){
 /**
  * Create a blob builder even when vendor prefixes exist
@@ -7654,7 +7861,7 @@ module.exports = (function() {
 })();
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],57:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/utf8js v2.0.0 by @mathias */
 ;(function(root) {
@@ -7897,7 +8104,7 @@ module.exports = (function() {
 }(this));
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],58:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -7922,7 +8129,7 @@ try {
   module.exports = false;
 }
 
-},{"global":59}],59:[function(require,module,exports){
+},{"global":60}],60:[function(require,module,exports){
 
 /**
  * Returns `this`. Execute this without a "context" (i.e. without it being
@@ -7932,7 +8139,7 @@ try {
 
 module.exports = (function () { return this; })();
 
-},{}],60:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 (function (global){
 /**
  * JSON parse.
@@ -7967,7 +8174,7 @@ module.exports = function parsejson(data) {
   }
 };
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],61:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 /**
  * Compiles a querystring
  * Returns string representation of the object
@@ -8006,7 +8213,7 @@ exports.decode = function(qs){
   return qry;
 };
 
-},{}],62:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 /**
  * Parses an URI
  *
@@ -8047,7 +8254,7 @@ module.exports = function parseuri(str) {
     return uri;
 };
 
-},{}],63:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -8092,7 +8299,7 @@ function ws(uri, protocols, opts) {
 
 if (WebSocket) ws.prototype = WebSocket.prototype;
 
-},{}],64:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 (function (global){
 
 /*
@@ -8154,12 +8361,12 @@ function hasBinary(data) {
 }
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"isarray":65}],65:[function(require,module,exports){
+},{"isarray":66}],66:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],66:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 
 var indexOf = [].indexOf;
 
@@ -8170,7 +8377,7 @@ module.exports = function(arr, obj){
   }
   return -1;
 };
-},{}],67:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 
 /**
  * HOP ref.
@@ -8255,7 +8462,7 @@ exports.length = function(obj){
 exports.isEmpty = function(obj){
   return 0 == exports.length(obj);
 };
-},{}],68:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 /**
  * Parses an URI
  *
@@ -8282,7 +8489,7 @@ module.exports = function parseuri(str) {
   return uri;
 };
 
-},{}],69:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 (function (global){
 /*global Blob,File*/
 
@@ -8427,7 +8634,7 @@ exports.removeBlobs = function(data, callback) {
 };
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./is-buffer":71,"isarray":72}],70:[function(require,module,exports){
+},{"./is-buffer":72,"isarray":73}],71:[function(require,module,exports){
 
 /**
  * Module dependencies.
@@ -8825,7 +9032,7 @@ function error(data){
   };
 }
 
-},{"./binary":69,"./is-buffer":71,"component-emitter":38,"debug":39,"isarray":72,"json3":73}],71:[function(require,module,exports){
+},{"./binary":70,"./is-buffer":72,"component-emitter":39,"debug":40,"isarray":73,"json3":74}],72:[function(require,module,exports){
 (function (global){
 
 module.exports = isBuf;
@@ -8842,9 +9049,9 @@ function isBuf(obj) {
 }
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],72:[function(require,module,exports){
-module.exports=require(65)
 },{}],73:[function(require,module,exports){
+module.exports=require(66)
+},{}],74:[function(require,module,exports){
 /*! JSON v3.2.6 | http://bestiejs.github.io/json3 | Copyright 2012-2013, Kit Cambridge | http://kit.mit-license.org */
 ;(function (window) {
   // Convenience aliases.
@@ -9707,7 +9914,7 @@ module.exports=require(65)
   }
 }(this));
 
-},{}],74:[function(require,module,exports){
+},{}],75:[function(require,module,exports){
 module.exports = toArray
 
 function toArray(list, index) {

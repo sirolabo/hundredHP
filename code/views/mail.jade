@@ -1,0 +1,22 @@
+extends _core
+block head
+  +makeHead("Mail")
+
+block main
+  .frontBG(data-webele="frontBG")
+    div(data-webele="headline")="XXXXX"
+    div(data-webele="mailArea")
+      div(data-webele="mailTextArea")
+        div(data-webele="main-description")="Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam"
+      form(data-webele="mailform" name="mailer" action="mailto:test@test.co.jp" enctype="text/plain")
+        div(data-webele="mailform-headline")="mail form"
+        table
+          tr(data-webele="mailform-tr")
+            td(data-webele="mailform-td")="件名"
+            td(data-webele="mailform-td")
+              input(type="text" size=50 name="subject")
+          tr(data-webele="mailform-tr")
+            td(data-webele="mailform-td")="本文"
+            td(data-webele="mailform-td")
+              textarea(cols=51 rows=5 name="body")
+        input(data-webele="mailform-submit" type="submit" value="送信")

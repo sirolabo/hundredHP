@@ -60,10 +60,12 @@ io.on('connection', (socket) ->
 		)
 	)
 
-	socket.on('fs_load', (param)->
+	socket.on('fs_read', (param)->
 		r.fs.readFile(param.fileName, (err, fileData) ->
-			console.log err if err
-			io.sockets.emit param.id + '_end', JSON.parse(fileData)
+			if err
+				console.log err 
+			else
+				io.sockets.emit param.id + '_end', JSON.parse(fileData)
 		)
 	)
 )
